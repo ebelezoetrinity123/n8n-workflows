@@ -1,0 +1,157 @@
+{
+  "meta": {
+    "instanceId": "workflow-b9cb297a",
+    "versionId": "1.0.1",
+    "createdAt": "2025-09-29T07:07:44.959324",
+    "updatedAt": "2025-10-30T12:00:00.000000",
+    "owner": "n8n-user",
+    "license": "MIT",
+    "category": "automation"
+  },
+  "nodes": [
+    {
+      "id": "31a0c5e9-c6f6-4921-8f92-be84cc669869",
+      "name": "On form submission",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        -220,
+        -80
+      ],
+      "parameters": {
+        "formTitle": "Syncbricks Youtube",
+        "options": {
+          "buttonLabel": "Update Youtube Video"
+        },
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Youtube Video Link",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Video Transcript",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Focus Keywords"
+            }
+          ]
+        }
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "07b23889-9c41-4202-a41b-350cca850e63",
+      "name": "Extract Video ID",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        150,
+        -80
+      ],
+      "parameters": {
+        "assignments": [
+          {
+            "name": "videoID",
+            "type": "string",
+            "value": "={{ $json['Youtube Video Link'].split('v=')[1] }}"
+          }
+        ]
+      },
+      "typeVersion": 3
+    },
+    {
+      "id": "44226e96-2429-497d-b84b-f3752f441b8b",
+      "name": "Youtube Meta Generator",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        380,
+        -80
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "id": "631fbe64-2851-42f0-8657-ddd501abcd34",
+      "name": "Format Tags",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        600,
+        -80
+      ],
+      "parameters": {
+        "assignments": [
+          {
+            "name": "tags",
+            "type": "string",
+            "value": "={{ $json.tags.join(',') }}"
+          }
+        ]
+      },
+      "typeVersion": 3
+    },
+    {
+      "id": "727cdc7f-e783-4d98-8476-a1623310a1fc",
+      "name": "YouTube",
+      "type": "n8n-nodes-base.youTube",
+      "position": [
+        820,
+        -80
+      ],
+      "parameters": {
+        "resource": "video",
+        "operation": "update",
+        "videoId": "={{ $node['Extract Video ID'].json.videoID }}"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract Video ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Video ID": {
+      "main": [
+        [
+          {
+            "node": "Youtube Meta Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtube Meta Generator": {
+      "main": [
+        [
+          {
+            "node": "Format Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Tags": {
+      "main": [
+        [
+          {
+            "node": "YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "UTC"
+  }
+}
