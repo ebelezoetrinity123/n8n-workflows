@@ -1,0 +1,387 @@
+{
+  "name": "Healthcare Appointment Booking Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Voice Agent Booking Request-Vapi",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        460
+      ],
+      "webhookId": "vapi-booking-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "patient_name",
+              "name": "patient_name",
+              "value": "={{ $json.body.patient_name }}",
+              "type": "string"
+            },
+            {
+              "id": "patient_phone",
+              "name": "patient_phone",
+              "value": "={{ $json.body.patient_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "appointment_date",
+              "name": "appointment_date",
+              "value": "={{ $json.body.appointment_date }}",
+              "type": "string"
+            },
+            {
+              "id": "appointment_time",
+              "name": "appointment_time",
+              "value": "={{ $json.body.appointment_time }}",
+              "type": "string"
+            },
+            {
+              "id": "doctor_name",
+              "name": "doctor_name",
+              "value": "={{ $json.body.doctor_name }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Extract Patient Details",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        460,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "get",
+        "calendar": "primary",
+        "eventId": "={{ $json.appointment_date }}T{{ $json.appointment_time }}"
+      },
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Check Calendar Availability",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [
+        680,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "notEqual",
+              "value2": "confirmed"
+            }
+          ]
+        }
+      },
+      "id": "d4e5f6a7-b8c9-0123-def1-234567890123",
+      "name": "Is Time Slot Available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "create",
+        "calendar": "primary",
+        "start": "={{ $json.appointment_date }}T{{ $json.appointment_time }}",
+        "end": "={{ $json.appointment_date }}T{{ new Date(new Date($json.appointment_date + 'T' + $json.appointment_time).getTime() + 30*60000).toISOString().split('T')[1] }}",
+        "summary": "Appointment with Dr. {{ $json.doctor_name }} - {{ $json.patient_name }}",
+        "description": "Patient: {{ $json.patient_name }}\nPhone: {{ $json.patient_phone }}"
+      },
+      "id": "e5f6a7b8-c9d0-1234-ef12-345678901234",
+      "name": "Create Appointment",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "confirmation_message",
+              "name": "message",
+              "value": "Hi {{ $json.patient_name }}, your appointment with Dr. {{ $json.doctor_name }} has been confirmed for {{ $json.appointment_date }} at {{ $json.appointment_time }}. We look forward to seeing you!",
+              "type": "string"
+            },
+            {
+              "id": "phone_number",
+              "name": "phone_number",
+              "value": "={{ $json.patient_phone }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "f6a7b8c9-d0e1-2345-f123-456789012345",
+      "name": "Prepare WhatsApp Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1280,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumber": "={{ $json.phone_number }}",
+        "message": "={{ $json.message }}"
+      },
+      "id": "a7b8c9d0-e1f2-3456-1234-567890123456",
+      "name": "Send WhatsApp Confirmation",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "lead_name",
+              "name": "lead_name",
+              "value": "={{ $json.patient_name }}",
+              "type": "string"
+            },
+            {
+              "id": "lead_phone",
+              "name": "lead_phone",
+              "value": "={{ $json.patient_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "lead_status",
+              "name": "lead_status",
+              "value": "Appointment Confirmed",
+              "type": "string"
+            },
+            {
+              "id": "appointment_details",
+              "name": "appointment_details",
+              "value": "{{ $json.appointment_date }} at {{ $json.appointment_time }} with Dr. {{ $json.doctor_name }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "b8c9d0e1-f2a3-4567-2345-678901234567",
+      "name": "Prepare CRM Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1480,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "create",
+        "firstName": "={{ $json.lead_name.split(' ')[0] }}",
+        "lastName": "={{ $json.lead_name.split(' ').slice(1).join(' ') }}",
+        "additionalFields": {
+          "phone": "={{ $json.lead_phone }}",
+          "customFields": {
+            "customField": [
+              {
+                "fieldId": "appointment_details",
+                "value": "={{ $json.appointment_details }}"
+              },
+              {
+                "fieldId": "status",
+                "value": "={{ $json.lead_status }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c9d0e1f2-a3b4-5678-3456-789012345678",
+      "name": "Add Lead to CRM",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "unavailable_message",
+              "name": "message",
+              "value": "Sorry {{ $json.patient_name }}, the requested time slot on {{ $json.appointment_date }} at {{ $json.appointment_time }} is not available. Please contact us to schedule an alternative time.",
+              "type": "string"
+            },
+            {
+              "id": "phone_number",
+              "name": "phone_number",
+              "value": "={{ $json.patient_phone }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "d0e1f2a3-b4c5-6789-4567-890123456789",
+      "name": "Prepare Unavailable Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1080,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumber": "={{ $json.phone_number }}",
+        "message": "={{ $json.message }}"
+      },
+      "id": "e1f2a3b4-c5d6-7890-5678-901234567890",
+      "name": "Send Unavailable Notification",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        560
+      ]
+    }
+  ],
+  "connections": {
+    "Voice Agent Booking Request-Vapi": {
+      "main": [
+        [
+          {
+            "node": "Extract Patient Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Patient Details": {
+      "main": [
+        [
+          {
+            "node": "Check Calendar Availability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Calendar Availability": {
+      "main": [
+        [
+          {
+            "node": "Is Time Slot Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Time Slot Available?": {
+      "main": [
+        [
+          {
+            "node": "Create Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Unavailable Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Appointment": {
+      "main": [
+        [
+          {
+            "node": "Prepare WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Confirmation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare CRM Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare CRM Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Add Lead to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Unavailable Message": {
+      "main": [
+        [
+          {
+            "node": "Send Unavailable Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-31T07:16:00.000Z",
+  "versionId": "1"
+}
