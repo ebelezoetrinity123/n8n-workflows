@@ -42,8 +42,7 @@ jobs:
           # Index all workflows
           python workflow_db.py --index --force
 
-          ## Generate categories
-          # python create_categories.py
+          
 
           # Generate static search index for GitHub Pages
           python scripts/generate_search_index.py
