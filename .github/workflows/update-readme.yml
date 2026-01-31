@@ -37,8 +37,7 @@ jobs:
           # Index all workflows to get latest stats
           python workflow_db.py --index --force
 
-          ## Generate categories
-          # python create_categories.py
+         
 
           # Get stats and update README
           python scripts/update_readme_stats.py
