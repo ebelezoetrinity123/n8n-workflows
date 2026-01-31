@@ -51,6 +51,9 @@ class WorkflowAssistant:
 
         where_clause = " OR ".join(search_terms) if search_terms else "1=1"
 
+        # Initialize params list
+        params = []
+        
         # Add intent-based filtering
         if intent == "automation":
             where_clause += (
