@@ -57,5 +57,6 @@ jobs:
             - Generated from latest workflow analysis
 
             🤖 Automated update via GitHub Actions"
+            git pull --rebase
             git push
           fi
