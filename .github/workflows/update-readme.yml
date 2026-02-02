@@ -35,7 +35,7 @@ jobs:
           mkdir -p database
 
           # Index all workflows to get latest stats
-          python workflow_db.py --index --force
+          python workflow_db.py --index --force --db database/workflows.db
           
           # Debug: Check if database was created        
           ls -la database/ || echo "Database directory is empty"
